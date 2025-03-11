@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Leaderboard - eSports</title>
+  <style>
+    /* Basic reset and styling */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #0f0f0f 0%, #292929 100%);
+      color: #fff;
+      min-height: 100vh;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      padding: 1rem 2rem;
+      background-color: #111;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    }
+    .logo {
+      height: 40px;
+      margin-right: 2rem;
+    }
+    nav ul {
+      display: flex;
+      list-style: none;
+    }
+    nav ul li {
+      margin-right: 1.5rem;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+    nav ul li a {
+      text-decoration: none;
+      color: #fff;
+    }
+    nav ul li:hover a {
+      color: #ccc;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+    
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      background-color: #1C1C1C;
+      border-radius: 6px;
+      overflow: hidden; /* if we want to hide corners for the table */
+    }
+    thead {
+      background-color: #2C2C2C;
+    }
+    th, td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid #333;
+    }
+    th {
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 0.05rem;
+    }
+    tbody tr:hover {
+      background-color: #2E2E2E;
+    }
+    
+    /* Specific column styling */
+    /* Rank column */
+    .rank {
+      width: 40px;      /* Adjust as needed */
+      font-weight: bold;
+      color: #FFCF40;   /* A gold-like color for the rank number */
+      text-align: center;
+    }
+    
+    /* Icon column */
+    .icon img {
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+    }
+    
+    /* Player name column */
+    .player-name {
+      font-weight: bold;
+    }
+    
+    /* Tier & Division columns */
+    .tier, .division {
+      text-transform: capitalize; /* e.g., "Challenger", "Master" */
+    }
+    
+    /* LP, W/L, Winrate columns */
+    .lp {
+      color: #FFD700; /* or any color you want for LP */
+    }
+    .wl {
+      color: #bbb;
+    }
+    .winrate {
+      font-weight: bold;
+      color: #ADFF2F; /* a greenish color for winrate */
+    }
+
+    /* Refresh Button Styling */
+    .refresh-btn {
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      background-color: #444;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.3s ease;
+    }
+    .refresh-btn:hover {
+      background-color: #666;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="../images/ame_logo.png" alt="Logo" class="logo">
+    <nav>
+      <ul>
+        <li><a href="home.html">Home</a></li>
+        <li><a href="teams.html">Teams</a></li>
+        <li><a href="players.html">Players</a></li>
+        <li><a href="leaderboard.html">Leaderboard</a></li>
+      </ul>
+    </nav>
+  </header>
+  
+  <div class="container">
+    <h1>Riot API Leaderboard</h1>
+    <!-- Manual refresh button -->
+    <button class="refresh-btn" onclick="buildLeaderboard(true)">Refresh Leaderboard</button>
+
+    <table id="leaderboard">
+      <thead>
+        <tr>
+          <th class="rank">#</th>
+          <th>Icon</th>
+          <th>Player</th>
+          <th>Tier</th>
+          <th>Div</th>
+          <th>LP</th>
+          <th>W/L</th>
+          <th>Winrate</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Leaderboard rows will be inserted here -->
+      </tbody>
+    </table>
+  </div>
+  
+  <script>
+    const apiKey = "RGAPI-61e5ca1f-b1b7-4bba-b1bf-95d880f5e106"; // Use your valid API key
+    const version = "15.1.1"; // DDragon version for profile icons
+    
+    // Summoner data caching (optional)
+    const cacheKey = "leaderboardCache";
+    const cacheDuration = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
+
+    // Function to load summoner data from a text file formatted as "SummonerOne#NA1" per line.
+    async function loadSummoners() {
+      try {
+        const response = await fetch('summoners.txt');
+        if (!response.ok) throw new Error('Failed to load summoner data');
+        const text = await response.text();
+        // Each line represents a summoner in "gameName#tagLine" format.
+        const summoners = text.split('\n')
+          .map(line => line.trim())
+          .filter(line => line.length > 0)
+          .map(line => {
+            const [gameName, tagLine] = line.split('#');
+            return { gameName: gameName.trim(), tagLine: tagLine.trim() };
+          });
+        return summoners;
+      } catch (error) {
+        console.error("Error loading summoners:", error);
+        return [];
+      }
+    }
+
+    // Fetch account info using Riot ID (game name and tagline)
+    async function getAccountInfo(gameName, tagLine) {
+      const encodedGameName = encodeURIComponent(gameName);
+      const encodedTagLine = encodeURIComponent(tagLine);
+      const accountInfoUrl = `https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodedGameName}/${encodedTagLine}?api_key=${apiKey}`;
+      const response = await fetch(accountInfoUrl);
+      if (!response.ok) throw new Error("Account info request failed");
+      return await response.json();
+    }
+
+    // Fetch summoner info using puuid from account info
+    async function getSummonerInfo(puuid) {
+      const summonerInfoUrl = `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${encodeURIComponent(puuid)}?api_key=${apiKey}`;
+      const response = await fetch(summonerInfoUrl);
+      if (!response.ok) throw new Error("Summoner info request failed");
+      return await response.json();
+    }
+
+    // Fetch league info using summoner ID
+    async function getLeagueInfo(summonerId) {
+      const leagueInfoUrl = `https://na1.api.riotgames.com/lol/league/v4/entries/by-summoner/${encodeURIComponent(summonerId)}?api_key=${apiKey}`;
+      const response = await fetch(leagueInfoUrl);
+      if (!response.ok) throw new Error("League info request failed");
+      return await response.json();
+    }
+
+    /**
+     * Builds or rebuilds the leaderboard.
+     * @param {boolean} forceRefresh - If true, ignore the local cache and fetch fresh data.
+     */
+    async function buildLeaderboard(forceRefresh = false) {
+      const leaderboardBody = document.querySelector('#leaderboard tbody');
+
+      // If not forcing a refresh, check localStorage cache (optional)
+      if (!forceRefresh) {
+        const cachedData = localStorage.getItem(cacheKey);
+        if (cachedData) {
+          const cache = JSON.parse(cachedData);
+          // If cache is less than 3 hours old, just load from cache
+          if (Date.now() - cache.timestamp < cacheDuration) {
+            leaderboardBody.innerHTML = cache.html;
+            return;
+          }
+        }
+      }
+
+      // Clear any existing rows
+      leaderboardBody.innerHTML = "";
+
+      const summoners = await loadSummoners();
+      
+      // Loop through summoners
+      for (let i = 0; i < summoners.length; i++) {
+        const summoner = summoners[i];
+        try {
+          // Get account data
+          const accountData = await getAccountInfo(summoner.gameName, summoner.tagLine);
+          // Get detailed summoner info using puuid
+          const summonerInfo = await getSummonerInfo(accountData.puuid);
+          // Get league info using summonerId
+          const leagueData = await getLeagueInfo(summonerInfo.id);
+          
+          // Filter for the Solo/Duo queue entry only
+          const soloEntry = leagueData.find(entry => entry.queueType === "RANKED_SOLO_5x5") || null;
+          
+          // Create a new row
+          const tr = document.createElement('tr');
+
+          // 1) Leaderboard Rank (#)
+          const rankTd = document.createElement('td');
+          rankTd.className = "rank";
+          rankTd.textContent = i + 1; // 1-based index
+          tr.appendChild(rankTd);
+
+          // 2) Icon
+          const iconTd = document.createElement('td');
+          iconTd.className = "icon";
+          const iconImg = document.createElement('img');
+          iconImg.src = `https://ddragon.leagueoflegends.com/cdn/${version}/img/profileicon/${summonerInfo.profileIconId}.png`;
+          iconImg.alt = "Player Icon";
+          iconTd.appendChild(iconImg);
+          tr.appendChild(iconTd);
+
+          // 3) Player Name
+          const nameTd = document.createElement('td');
+          nameTd.className = "player-name";
+          nameTd.textContent = summoner.gameName;
+          tr.appendChild(nameTd);
+
+          // 4) Tier
+          const tierTd = document.createElement('td');
+          tierTd.className = "tier";
+          tierTd.textContent = soloEntry ? soloEntry.tier.toLowerCase() : "unranked";
+          tr.appendChild(tierTd);
+
+          // 5) Division
+          const divTd = document.createElement('td');
+          divTd.className = "division";
+          divTd.textContent = (soloEntry && soloEntry.rank) ? soloEntry.rank : "-";
+          tr.appendChild(divTd);
+
+          // 6) LP
+          const lpTd = document.createElement('td');
+          lpTd.className = "lp";
+          lpTd.textContent = soloEntry ? soloEntry.leaguePoints + " LP" : "0 LP";
+          tr.appendChild(lpTd);
+
+          // 7) W/L
+          const wlTd = document.createElement('td');
+          wlTd.className = "wl";
+          if (soloEntry && typeof soloEntry.wins !== 'undefined' && typeof soloEntry.losses !== 'undefined') {
+            wlTd.textContent = `${soloEntry.wins}W - ${soloEntry.losses}L`;
+          } else {
+            wlTd.textContent = "N/A";
+          }
+          tr.appendChild(wlTd);
+
+          // 8) Winrate
+          const wrTd = document.createElement('td');
+          wrTd.className = "winrate";
+          if (soloEntry && (soloEntry.wins || soloEntry.losses)) {
+            const totalGames = soloEntry.wins + soloEntry.losses;
+            const winRate = ((soloEntry.wins / totalGames) * 100).toFixed(1);
+            wrTd.textContent = `${winRate}%`;
+          } else {
+            wrTd.textContent = "N/A";
+          }
+          tr.appendChild(wrTd);
+
+          // Append row to table
+          leaderboardBody.appendChild(tr);
+        } catch (error) {
+          console.error("Error fetching data for summoner:", summoner, error);
+        }
+      }
+
+      // After building, update the local cache (unless forcing refresh means you *never* want to cache—your call)
+      localStorage.setItem(
+        cacheKey,
+        JSON.stringify({ timestamp: Date.now(), html: leaderboardBody.innerHTML })
+      );
+    }
+
+    // Initialize the leaderboard on page load
+    buildLeaderboard();
+
+    // Handle bfcache (if user navigates away and back)
+    window.addEventListener('pageshow', (event) => {
+      if (event.persisted) {
+        buildLeaderboard();
+      }
+    });
+  </script>
+</body>
+</html>

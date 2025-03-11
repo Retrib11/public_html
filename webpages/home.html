@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Home - eSports</title>
+  <style>
+    /* Basic styling */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #0f0f0f 0%, #292929 100%);
+      color: #fff;
+      min-height: 100vh;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      padding: 1rem 2rem;
+      background-color: #111;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    }
+    .logo {
+      height: 40px;
+      margin-right: 2rem;
+    }
+    nav ul {
+      display: flex;
+      list-style: none;
+    }
+    nav ul li {
+      margin-right: 1.5rem;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+    nav ul li a {
+      text-decoration: none;
+      color: #fff;
+    }
+    nav ul li:hover a {
+      color: #ccc;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+    .boxes {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .box {
+      background: rgba(255,255,255,0.1);
+      padding: 2rem;
+      text-align: center;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+      text-decoration: none; /* no underline */
+      color: #fff;
+    }
+    .box:hover {
+      background: rgba(255,255,255,0.2);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="../images/ame_logo.png" alt="Logo" class="logo">
+    <nav>
+      <ul>
+        <li><a href="home.html">Home</a></li>
+        <li><a href="teams.html">Teams</a></li>
+        <li><a href="players.html">Players</a></li>
+        <li><a href="leaderboard.html">Leaderboard</a></li>
+      </ul>
+    </nav>
+  </header>
+  </div>
+</body>
+</html>

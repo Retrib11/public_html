@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Home - eSports</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* Basic styling */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #0f0f0f 0%, #292929 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      padding: 1rem 2rem;
+      background-color: #111;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    }
+    .logo {
+      height: 40px;
+      margin-right: 2rem;
+    }
+    nav ul {
+      display: flex;
+      list-style: none;
+    }
+    nav ul li {
+      margin-right: 1.5rem;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+    nav ul li a {
+      text-decoration: none;
+      color: #fff;
+    }
+    nav ul li:hover a {
+      color: #ccc;
+    }
+    .container {
+      flex: 1;
+      padding: 2rem;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    /* Grid layout: the big box (MAROON) in the first row,
+       and the three smaller boxes in the second row */
+    .boxes {
+      display: grid;
+      grid-template-rows: 2fr 1fr;
+      gap: 1rem;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      height: 80vh;
+    }
+    /* The featured box row */
+    .big-box {
+      display: grid;
+      width: 100%;
+    }
+    /* The row with the three smaller boxes */
+    .small-boxes {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    .box {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-decoration: none;
+      color: #fff;
+      transition: background 0.3s, transform 0.3s;
+    }
+    .box:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
+    @media (max-width: 768px) {
+      .boxes {
+        grid-template-rows: auto auto;
+        height: auto;
+      }
+      .small-boxes {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="../images/ame_logo.png" alt="Logo" class="logo">
+    <nav>
+      <ul>
+        <li><a href="home.html">Home</a></li>
+        <li><a href="teams.html">Teams</a></li>
+        <li><a href="players.html">Players</a></li>
+        <li><a href="leaderboard.html">Leaderboard</a></li>
+      </ul>
+    </nav>
+  </header>
+  <div class="container">
+    <h1>Teams</h1>
+    <div class="boxes">
+      <div class="big-box">
+        <a href="team.html?team=TAMUM" class="box">MAROON</a>
+      </div>
+      <div class="small-boxes">
+        <a href="team.html?team=TAMUW" class="box">WHITE</a>
+        <a href="team.html?team=TAMUB" class="box">BLACK</a>
+        <a href="team.html?team=TAMUG" class="box">GRAY</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

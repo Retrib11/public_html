@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Details</title>
+  <style>
+    /* Basic styling */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #0f0f0f 0%, #292929 100%);
+      color: #fff;
+      min-height: 100vh;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      padding: 1rem 2rem;
+      background-color: #111;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    }
+    .logo {
+      height: 40px;
+      margin-right: 2rem;
+    }
+    nav ul {
+      display: flex;
+      list-style: none;
+    }
+    nav ul li {
+      margin-right: 1.5rem;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+    nav ul li a {
+      text-decoration: none;
+      color: #fff;
+    }
+    nav ul li:hover a {
+      color: #ccc;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+    .back-link {
+      display: inline-block;
+      text-decoration: none;
+      color: #fff;
+      background: #333;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+      transition: background 0.3s;
+    }
+    .back-link:hover {
+      background: #555;
+    }
+    h1 {
+      margin-bottom: 1rem;
+    }
+    .info-sections {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .info-box {
+      flex: 1 1 calc(33% - 1rem);
+      min-width: 220px;
+      background: #1a1a1a;
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+    .info-box h2 {
+      margin-bottom: 1.5rem;
+      font-size: 1.1rem;
+      text-align: center;
+      color: #bbb;
+      font-weight: bold;
+    }
+    .info-box p {
+      text-align: center;
+      margin: 1rem 0;
+      line-height: 1.4;
+    }
+    .info-box p span {
+      display: inline-block;
+      font-weight: bold;
+      font-size: 1.25rem;
+      margin-left: 0.3rem;
+    }
+    #totalGames, #seriesWinRate, #overallWinRate {
+      font-size: 1.5rem;
+    }
+    .schedule-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    .schedule-table th,
+    .schedule-table td {
+      padding: 0.5rem;
+      text-align: left;
+    }
+    .schedule-table th {
+      font-weight: normal;
+      color: #ccc;
+      background: #2a2a2a;
+    }
+    .schedule-table tbody tr:nth-child(odd) {
+      background: rgba(255, 255, 255, 0.05);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="../images/ame_logo.png" alt="Logo" class="logo">
+    <nav>
+      <ul>
+        <li><a href="home.html">Home</a></li>
+        <li><a href="teams.html">Teams</a></li>
+        <li><a href="players.html">Players</a></li>
+        <li><a href="leaderboard.html">Leaderboard</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="container">
+    <a class="back-link" href="teams.html">&larr; Back to Teams</a>
+    <h1 id="teamName">Team Name</h1>
+
+    <div class="info-sections">
+      <div class="info-box">
+        <h2>2025 Overview</h2>
+        <p>Games: <span id="totalGames"></span></p>
+        <p>Series Win Rate: <span id="seriesWinRate"></span></p>
+        <p>Overall Win Rate (Individual Games): <span id="overallWinRate"></span></p>
+      </div>
+      <div class="info-box">
+        <h2>Last Match</h2>
+        <p>Score: <span id="lastMatchScore"></span></p>
+        <p>Opponent: <span id="lastMatchOpponent"></span></p>
+        <p>Date: <span id="lastMatchDate"></span></p>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <h2>Schedule</h2>
+      <table class="schedule-table" id="scheduleTable">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Opponent</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Filled by JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // --- 1) Get the team param from the URL ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const teamParam = urlParams.get('team') || 'TAMUM';
+
+    // Show the team name at the top
+    document.getElementById('teamName').innerText = teamParam;
+
+    // --- 2) Build the path to ../schedules/TEAM.txt ---
+    const txtFilePath = '../schedules/' + teamParam + '.txt';
+
+    // --- 3) Fetch the plain text file for this team ---
+    fetch(txtFilePath)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Team file not found');
+        }
+        return response.text();
+      })
+      .then(text => {
+        // --- 4) Parse the text into matches ---
+        const matches = parseMatches(text);
+
+        // --- 5) Compute stats & fill in the page ---
+        fillTeamData(matches);
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('teamName').innerText = 'Team Not Found';
+      });
+
+    function parseMatches(fullText) {
+      // Each match is 3 lines: "TAMUM vs X", "Score: Y-Z", "Date: mm/dd/yyyy"
+      const lines = fullText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const matches = [];
+
+      for (let i = 0; i < lines.length; i += 3) {
+        const vsLine = lines[i];
+        const scoreLine = lines[i + 1];
+        const dateLine = lines[i + 2];
+
+        // "TEAM vs Opponent"
+        let opponent = '';
+        const vsParts = vsLine.split(' vs ');
+        if (vsParts.length === 2) {
+          opponent = vsParts[1];
+        }
+
+        // "Score: X-Y"
+        let homeScore = 0, awayScore = 0;
+        const scoreParts = scoreLine.replace('Score:', '').trim().split('-');
+        if (scoreParts.length === 2) {
+          homeScore = parseInt(scoreParts[0]) || 0;
+          awayScore = parseInt(scoreParts[1]) || 0;
+        }
+
+        // "Date: mm/dd/yyyy"
+        let matchDate = '';
+        if (dateLine.startsWith('Date:')) {
+          matchDate = dateLine.replace('Date:', '').trim();
+        }
+
+        matches.push({ opponent, homeScore, awayScore, date: matchDate });
+      }
+
+      return matches;
+    }
+
+    function fillTeamData(matches) {
+      let completedMatches = 0;
+      let seriesWins = 0;
+      let totalGamesPlayed = 0;
+      let totalGamesWon = 0;
+      let lastMatch = null;
+
+      matches.forEach(m => {
+        // If score is 0-0, treat as unplayed
+        if (m.homeScore === 0 && m.awayScore === 0) return;
+        completedMatches++;
+        if (m.homeScore > m.awayScore) {
+          seriesWins++;
+        }
+        totalGamesPlayed += (m.homeScore + m.awayScore);
+        totalGamesWon += m.homeScore;
+      });
+
+      // Last played match
+      for (let i = matches.length - 1; i >= 0; i--) {
+        if (!(matches[i].homeScore === 0 && matches[i].awayScore === 0)) {
+          lastMatch = matches[i];
+          break;
+        }
+      }
+
+      // Fill schedule table
+      const scheduleTbody = document.getElementById('scheduleTable').querySelector('tbody');
+      scheduleTbody.innerHTML = '';
+      matches.forEach(m => {
+        const row = document.createElement('tr');
+
+        const dateTd = document.createElement('td');
+        dateTd.textContent = m.date;
+
+        const oppTd = document.createElement('td');
+        oppTd.textContent = m.opponent;
+
+        const scoreTd = document.createElement('td');
+        scoreTd.textContent = (m.homeScore === 0 && m.awayScore === 0)
+          ? 'Not Played'
+          : (m.homeScore + '-' + m.awayScore);
+
+        row.appendChild(dateTd);
+        row.appendChild(oppTd);
+        row.appendChild(scoreTd);
+        scheduleTbody.appendChild(row);
+      });
+
+      // Overview
+      document.getElementById('totalGames').textContent = completedMatches;
+      const seriesWinRate = (completedMatches > 0)
+        ? ((seriesWins / completedMatches) * 100).toFixed(1) + '%'
+        : '0%';
+      document.getElementById('seriesWinRate').textContent = seriesWinRate;
+
+      const overallWinRate = (totalGamesPlayed > 0)
+        ? ((totalGamesWon / totalGamesPlayed) * 100).toFixed(1) + '%'
+        : '0%';
+      document.getElementById('overallWinRate').textContent = overallWinRate;
+
+      if (lastMatch) {
+        document.getElementById('lastMatchScore').textContent = lastMatch.homeScore + '-' + lastMatch.awayScore;
+        document.getElementById('lastMatchOpponent').textContent = lastMatch.opponent;
+        document.getElementById('lastMatchDate').textContent = lastMatch.date;
+      } else {
+        document.getElementById('lastMatchScore').textContent = 'N/A';
+        document.getElementById('lastMatchOpponent').textContent = 'N/A';
+        document.getElementById('lastMatchDate').textContent = 'N/A';
+      }
+    }
+  </script>
+</body>
+</html>
