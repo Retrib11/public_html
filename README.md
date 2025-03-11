@@ -1,45 +1,45 @@
-mostly chatgpt'd at the moment. 80% of the code is generated while 20% is by retrian.
+# League of Legends Leaderboard Website for TAMU
 
-workflow timeline:
+## Workflow Timeline
 
-build pages
-  home
-  teams
-  players
-  leaderboard
-  stats
-  faq
+### **Build Pages**
+- **Home**
+- **Teams**
+- **Players**
+- **Leaderboard**
+- **Stats**
+- **FAQ**
 
-setup database
-  players information
-  schedule
-  match stats
-  leaderboard data tracking
+### **Setup Database**
+- **Players Information**
+- **Schedule**
+- **Match Stats**
+- **Leaderboard Data Tracking**
 
-api leaderboard
-  capture rank, games, winrates
+### **API Leaderboard**
+- Capture **Rank**, **Games**, and **Winrates**
 
-design
-  improve visuals
-  add signups/logins
-  create your own leaderboard
-  edit your userpage granted upon admin
+### **Design**
+- Improve **Visuals**
+- Add **Signups/Logins**
+- Create **Your Own Leaderboard**
+- Edit **User Page** granted upon **Admin**
 
-misc
-  display stats for different iterations of teams during same season
-  add socials to playercards
-  track champion playcount of official matches
-  make interactive schedule
-  give each player a bio section
-  featured player of the week each for solo queue, scrims, and tournament games
-  fix mobile design
-  add vods to games that were streamed/uploaded
-  embed twitch channel
-  peak rank for each player card
-  winrates on champions played
-  add roles to leaderboard
-  have a leaderboard for each team on their team page
-  track team total games competitive and soloqueue
-  
-
-
+### **Miscellaneous**
+- Display stats for different **iterations of teams** during the same season
+- Add **Socials** to player cards
+- Track **Champion Play Count** of official matches
+- Make **Interactive Schedule**
+- Give each player a **Bio Section**
+- Feature **Player of the Week** for:
+  - Solo Queue
+  - Scrims
+  - Tournament Games
+- Fix **Mobile Design**
+- Add **VODs** to games that were streamed/uploaded
+- Embed **Twitch Channel**
+- Display **Peak Rank** for each player card
+- Show **Winrates on Champions Played**
+- Add **Roles** to Leaderboard
+- Have a **Leaderboard** for each team on their **Team Page**
+- Track **Team Total Games** in Competitive and Solo Queue
