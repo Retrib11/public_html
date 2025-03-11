@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Home - eSports</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    /* Basic styling */
+    /* Reset & basic styling */
     * {
       margin: 0;
       padding: 0;
@@ -12,9 +13,11 @@
       font-family: Arial, sans-serif;
     }
     body {
-      background: linear-gradient(135deg, #0f0f0f 0%, #292929 100%);
+      background: linear-gradient(135deg, #1c1c1c, #111);
       color: #fff;
       min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
     header {
       display: flex;
@@ -33,40 +36,101 @@
     }
     nav ul li {
       margin-right: 1.5rem;
-      cursor: pointer;
-      transition: color 0.3s ease;
     }
     nav ul li a {
       text-decoration: none;
       color: #fff;
+      transition: color 0.3s ease;
     }
-    nav ul li:hover a {
+    nav ul li a:hover {
       color: #ccc;
     }
     .container {
       max-width: 1200px;
       margin: 2rem auto;
       padding: 0 2rem;
+      flex: 1;
+      text-align: center;
     }
+    /* Hero Section */
+    .hero {
+      padding: 4rem 2rem;
+    }
+    .hero h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    .hero p {
+      font-size: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .under-construction {
+      font-size: 1.25rem;
+      padding: 1rem 2rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px dashed #fff;
+      display: inline-block;
+      margin-top: 1rem;
+      border-radius: 8px;
+    }
+    h4 {
+      padding: 2rem;
+      font-size: 1rem;
+      font-weight: normal;
+    }
+    /* Cool Boxes Grid */
     .boxes {
       display: grid;
-      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 1rem;
-      margin-top: 2rem;
+      margin: 2rem 0;
     }
     .box {
-      background: rgba(255,255,255,0.1);
+      background: rgba(255, 255, 255, 0.1);
       padding: 2rem;
-      text-align: center;
       border-radius: 8px;
-      font-weight: bold;
+      transition: transform 0.3s, background 0.3s;
       cursor: pointer;
-      transition: background 0.3s;
-      text-decoration: none; /* no underline */
-      color: #fff;
+      opacity: 0; /* initial state for fade in */
+      animation: fadeIn 1s forwards;
     }
     .box:hover {
-      background: rgba(255,255,255,0.2);
+      transform: scale(1.05);
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .box h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .box p {
+      font-size: 1rem;
+    }
+    /* Fade in animation */
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+    /* Delay fade-in for each box */
+    .box:nth-child(1) {
+      animation-delay: 0.2s;
+    }
+    .box:nth-child(2) {
+      animation-delay: 0.4s;
+    }
+    .box:nth-child(3) {
+      animation-delay: 0.6s;
+    }
+    .box:nth-child(4) {
+      animation-delay: 0.8s;
+    }
+    /* Footer */
+    footer {
+      padding: 1rem;
+      background: #111;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #aaa;
     }
   </style>
 </head>
@@ -82,6 +146,38 @@
       </ul>
     </nav>
   </header>
+
+  <div class="container">
+    <!-- Hero Section -->
+    <section class="hero">
+      <h1>TAMU LEAGUE OF LEGENDS</h1>
+      <div class="under-construction">
+        🚧 Under Construction 🚧
+      </div>
+      <h4>
+        Currently still working on this website. If you have any tips or recommendations, please let @retri_ know.
+      </h4>
+    </section>
+
+    <!-- Cool Feature Boxes -->
+    <section class="boxes">
+      <div class="box">
+        <h2>Team Data</h2>
+        <p>Team information of each season!</p>
+      </div>
+      <div class="box">
+        <h2>Player Data</h2>
+        <p>Find stats of TAMU players.</p>
+      </div>
+      <div class="box">
+        <h2>Leaderboard</h2>
+        <p>See current player standings.</p>
+      </div>
+      <div class="box">
+        <h2>Much more!</h2>
+        <p>Gonna figure out more.</p>
+      </div>
+    </section>
   </div>
 </body>
 </html>

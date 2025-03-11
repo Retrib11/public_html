@@ -12,7 +12,7 @@
       font-family: Arial, sans-serif;
     }
     body {
-      background: linear-gradient(135deg, #0f0f0f 0%, #292929 100%);
+      background-color: #1c1c1c;
       color: #fff;
       min-height: 100vh;
     }
@@ -50,6 +50,14 @@
       padding: 0 2rem;
     }
     
+    /* Refresh indicator styling */
+    #refresh-indicator {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    
     /* Table styling */
     table {
       width: 100%;
@@ -57,13 +65,13 @@
       margin-top: 1rem;
       background-color: #1C1C1C;
       border-radius: 6px;
-      overflow: hidden; /* if we want to hide corners for the table */
+      overflow: hidden;
     }
     thead {
       background-color: #2C2C2C;
     }
     th, td {
-      padding: 1rem;
+      padding: 0.5rem;
       text-align: left;
       border-bottom: 1px solid #333;
     }
@@ -76,45 +84,60 @@
       background-color: #2E2E2E;
     }
     
+    /* Special styling for top ranks */
+    .big-box td {
+      font-size: 1rem;
+      background-color: #ffd90049;
+      padding: 0.5rem;
+    }
+    .mid-box td {
+      font-size: 1rem;
+      background-color: #c0c0c03d;
+      padding: 0.5rem;
+    }
+    .small-box td {
+      font-size: 1rem;
+      background-color: #cd80322a;
+      padding: 0.5rem;
+    }
+    
     /* Specific column styling */
-    /* Rank column */
     .rank {
-      width: 40px;      /* Adjust as needed */
+      width: 40px;
       font-weight: bold;
-      color: #FFCF40;   /* A gold-like color for the rank number */
       text-align: center;
     }
-    
-    /* Icon column */
     .icon img {
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
+      border-radius: 8%;
+      width: 50px;
+      height: 50px;
       object-fit: cover;
     }
-    
-    /* Player name column */
     .player-name {
       font-weight: bold;
     }
-    
-    /* Tier & Division columns */
     .tier, .division {
-      text-transform: capitalize; /* e.g., "Challenger", "Master" */
+      font-weight: bold;
+      text-transform: capitalize;
     }
-    
-    /* LP, W/L, Winrate columns */
     .lp {
-      color: #FFD700; /* or any color you want for LP */
+      font-weight: bold;
+      color: #ffffff;
     }
     .wl {
-      color: #bbb;
+      font-weight: bold;
+      color: #ffffff;
     }
     .winrate {
       font-weight: bold;
-      color: #ADFF2F; /* a greenish color for winrate */
+      color: #56ce56;
     }
-
+    .change {
+      width: 60px;
+      text-align: center;
+      font-weight: bold;
+    }
+    
     /* Refresh Button Styling */
     .refresh-btn {
       margin-top: 1rem;
@@ -129,6 +152,20 @@
     }
     .refresh-btn:hover {
       background-color: #666;
+    }
+    
+    /* Note under refresh button */
+    .update-note {
+      text-align: center;
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      color: #ccc;
+    }
+    
+    /* Row fade-in animation */
+    @keyframes fadeInRow {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
@@ -146,9 +183,14 @@
   </header>
   
   <div class="container">
-    <h1>Riot API Leaderboard</h1>
+    <h1>Leaderboard</h1>
+    
+    <!-- Refresh indicator -->
+    <div id="refresh-indicator">Refreshing leaderboard...</div>
     <!-- Manual refresh button -->
-    <button class="refresh-btn" onclick="buildLeaderboard(true)">Refresh Leaderboard</button>
+    <button class="refresh-btn" onclick="refreshLeaderboard()">Refresh Leaderboard</button>
+    <!-- Update note -->
+    <div class="update-note">Note: Leaderboard updates every 3 hours.</div>
 
     <table id="leaderboard">
       <thead>
@@ -161,6 +203,7 @@
           <th>LP</th>
           <th>W/L</th>
           <th>Winrate</th>
+          <th class="change">Change</th>
         </tr>
       </thead>
       <tbody>
@@ -172,10 +215,30 @@
   <script>
     const apiKey = "RGAPI-61e5ca1f-b1b7-4bba-b1bf-95d880f5e106"; // Use your valid API key
     const version = "15.1.1"; // DDragon version for profile icons
-    
+
     // Summoner data caching (optional)
     const cacheKey = "leaderboardCache";
     const cacheDuration = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
+
+    // Define ranking orders
+    const tierOrder = {
+      challenger: 0,
+      grandmaster: 1,
+      master: 2,
+      diamond: 3,
+      emerald: 4,
+      platinum: 5,
+      gold: 6,
+      silver: 7,
+      unranked: 8
+    };
+    const divisionOrder = {
+      I: 0,
+      II: 1,
+      III: 2,
+      IV: 3,
+      '-': 4
+    };
 
     // Function to load summoner data from a text file formatted as "SummonerOne#NA1" per line.
     async function loadSummoners() {
@@ -198,7 +261,6 @@
       }
     }
 
-    // Fetch account info using Riot ID (game name and tagline)
     async function getAccountInfo(gameName, tagLine) {
       const encodedGameName = encodeURIComponent(gameName);
       const encodedTagLine = encodeURIComponent(tagLine);
@@ -208,7 +270,6 @@
       return await response.json();
     }
 
-    // Fetch summoner info using puuid from account info
     async function getSummonerInfo(puuid) {
       const summonerInfoUrl = `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${encodeURIComponent(puuid)}?api_key=${apiKey}`;
       const response = await fetch(summonerInfoUrl);
@@ -216,7 +277,6 @@
       return await response.json();
     }
 
-    // Fetch league info using summoner ID
     async function getLeagueInfo(summonerId) {
       const leagueInfoUrl = `https://na1.api.riotgames.com/lol/league/v4/entries/by-summoner/${encodeURIComponent(summonerId)}?api_key=${apiKey}`;
       const response = await fetch(leagueInfoUrl);
@@ -225,126 +285,250 @@
     }
 
     /**
-     * Builds or rebuilds the leaderboard.
-     * @param {boolean} forceRefresh - If true, ignore the local cache and fetch fresh data.
+     * Builds or rebuilds the leaderboard by sorting players based on their tier, division, and LP.
+     * A fade-in animation is applied row-by-row.
+     * @param {boolean} forceRefresh - If true, fetch fresh data.
      */
     async function buildLeaderboard(forceRefresh = false) {
       const leaderboardBody = document.querySelector('#leaderboard tbody');
+      const refreshIndicator = document.getElementById("refresh-indicator");
 
-      // If not forcing a refresh, check localStorage cache (optional)
+      // Load stored previous rankings from localStorage (if any)
+      let storedRankings = JSON.parse(localStorage.getItem("previousRankings")) || {};
+
+      // If not forcing refresh, try local cache
       if (!forceRefresh) {
         const cachedData = localStorage.getItem(cacheKey);
         if (cachedData) {
           const cache = JSON.parse(cachedData);
-          // If cache is less than 3 hours old, just load from cache
           if (Date.now() - cache.timestamp < cacheDuration) {
             leaderboardBody.innerHTML = cache.html;
+            applyRowFadeIn();
             return;
           }
         }
       }
 
-      // Clear any existing rows
-      leaderboardBody.innerHTML = "";
+      // Show the refresh indicator
+      refreshIndicator.style.display = "block";
 
+      const fragment = document.createDocumentFragment();
       const summoners = await loadSummoners();
-      
-      // Loop through summoners
+      const players = [];
+
       for (let i = 0; i < summoners.length; i++) {
         const summoner = summoners[i];
         try {
-          // Get account data
           const accountData = await getAccountInfo(summoner.gameName, summoner.tagLine);
-          // Get detailed summoner info using puuid
           const summonerInfo = await getSummonerInfo(accountData.puuid);
-          // Get league info using summonerId
           const leagueData = await getLeagueInfo(summonerInfo.id);
-          
-          // Filter for the Solo/Duo queue entry only
           const soloEntry = leagueData.find(entry => entry.queueType === "RANKED_SOLO_5x5") || null;
           
-          // Create a new row
-          const tr = document.createElement('tr');
-
-          // 1) Leaderboard Rank (#)
-          const rankTd = document.createElement('td');
-          rankTd.className = "rank";
-          rankTd.textContent = i + 1; // 1-based index
-          tr.appendChild(rankTd);
-
-          // 2) Icon
-          const iconTd = document.createElement('td');
-          iconTd.className = "icon";
-          const iconImg = document.createElement('img');
-          iconImg.src = `https://ddragon.leagueoflegends.com/cdn/${version}/img/profileicon/${summonerInfo.profileIconId}.png`;
-          iconImg.alt = "Player Icon";
-          iconTd.appendChild(iconImg);
-          tr.appendChild(iconTd);
-
-          // 3) Player Name
-          const nameTd = document.createElement('td');
-          nameTd.className = "player-name";
-          nameTd.textContent = summoner.gameName;
-          tr.appendChild(nameTd);
-
-          // 4) Tier
-          const tierTd = document.createElement('td');
-          tierTd.className = "tier";
-          tierTd.textContent = soloEntry ? soloEntry.tier.toLowerCase() : "unranked";
-          tr.appendChild(tierTd);
-
-          // 5) Division
-          const divTd = document.createElement('td');
-          divTd.className = "division";
-          divTd.textContent = (soloEntry && soloEntry.rank) ? soloEntry.rank : "-";
-          tr.appendChild(divTd);
-
-          // 6) LP
-          const lpTd = document.createElement('td');
-          lpTd.className = "lp";
-          lpTd.textContent = soloEntry ? soloEntry.leaguePoints + " LP" : "0 LP";
-          tr.appendChild(lpTd);
-
-          // 7) W/L
-          const wlTd = document.createElement('td');
-          wlTd.className = "wl";
-          if (soloEntry && typeof soloEntry.wins !== 'undefined' && typeof soloEntry.losses !== 'undefined') {
-            wlTd.textContent = `${soloEntry.wins}W - ${soloEntry.losses}L`;
-          } else {
-            wlTd.textContent = "N/A";
+          let tier = "unranked";
+          let division = "-";
+          let lp = 0, wins = 0, losses = 0;
+          if (soloEntry) {
+            tier = soloEntry.tier.toLowerCase();
+            division = soloEntry.rank;
+            lp = soloEntry.leaguePoints;
+            wins = soloEntry.wins;
+            losses = soloEntry.losses;
           }
-          tr.appendChild(wlTd);
-
-          // 8) Winrate
-          const wrTd = document.createElement('td');
-          wrTd.className = "winrate";
-          if (soloEntry && (soloEntry.wins || soloEntry.losses)) {
-            const totalGames = soloEntry.wins + soloEntry.losses;
-            const winRate = ((soloEntry.wins / totalGames) * 100).toFixed(1);
-            wrTd.textContent = `${winRate}%`;
-          } else {
-            wrTd.textContent = "N/A";
-          }
-          tr.appendChild(wrTd);
-
-          // Append row to table
-          leaderboardBody.appendChild(tr);
+          
+          const tierValue = tierOrder[tier] !== undefined ? tierOrder[tier] : tierOrder["unranked"];
+          const divValue = divisionOrder[division] !== undefined ? divisionOrder[division] : divisionOrder["-"];
+          
+          players.push({
+            summonerName: summoner.gameName,
+            iconId: summonerInfo.profileIconId,
+            tier: tier,
+            division: division,
+            lp: lp,
+            wins: wins,
+            losses: losses,
+            tierValue: tierValue,
+            divValue: divValue
+          });
         } catch (error) {
           console.error("Error fetching data for summoner:", summoner, error);
+          players.push({
+            summonerName: summoner.gameName,
+            iconId: 0,
+            tier: "unranked",
+            division: "-",
+            lp: 0,
+            wins: 0,
+            losses: 0,
+            tierValue: tierOrder["unranked"],
+            divValue: divisionOrder["-"]
+          });
         }
       }
 
-      // After building, update the local cache (unless forcing refresh means you *never* want to cache—your call)
+      // Sort players: by tier, then division, then LP (descending)
+      players.sort((a, b) => {
+        if (a.tierValue !== b.tierValue) return a.tierValue - b.tierValue;
+        if (a.divValue !== b.divValue) return a.divValue - b.divValue;
+        return b.lp - a.lp;
+      });
+
+      // Build new table rows with fade-in animation
+      for (let i = 0; i < players.length; i++) {
+        const player = players[i];
+        const tr = document.createElement('tr');
+        // Apply fade-in animation to each row with delay based on index
+        tr.style.animation = `fadeInRow 0.5s ease forwards`;
+        tr.style.animationDelay = (i * 0.1) + "s";
+
+        // Special styling for top ranks
+        if (i === 0) {
+          tr.classList.add('big-box');
+        } else if (i === 1) {
+          tr.classList.add('mid-box');
+        } else if (i === 2) {
+          tr.classList.add('small-box');
+        }
+
+        // Rank column
+        const rankTd = document.createElement('td');
+        rankTd.className = "rank";
+        rankTd.textContent = i + 1;
+        if (i === 0) {
+          rankTd.style.color = "#FFD700";
+        } else if (i === 1) {
+          rankTd.style.color = "#C0C0C0";
+        } else if (i === 2) {
+          rankTd.style.color = "#CD7F32";
+        } else {
+          rankTd.style.color = "#FFFFFF";
+        }
+        tr.appendChild(rankTd);
+
+        // Icon column
+        const iconTd = document.createElement('td');
+        iconTd.className = "icon";
+        const iconImg = document.createElement('img');
+        iconImg.src = `https://ddragon.leagueoflegends.com/cdn/${version}/img/profileicon/${player.iconId}.png`;
+        iconImg.alt = "Player Icon";
+        iconTd.appendChild(iconImg);
+        tr.appendChild(iconTd);
+
+        // Player name column
+        const nameTd = document.createElement('td');
+        nameTd.className = "player-name";
+        nameTd.textContent = player.summonerName;
+        tr.appendChild(nameTd);
+
+        // Tier (as image)
+        const tierTd = document.createElement('td');
+        tierTd.className = "tier";
+        const tierImg = document.createElement('img');
+        tierImg.src = '../images/' + player.tier.toUpperCase() + '_SMALL.jpg';
+        tierImg.alt = player.tier;
+        tierImg.style.height = "30px";
+        tierTd.appendChild(tierImg);
+        tr.appendChild(tierTd);
+
+        // Division column
+        const divTd = document.createElement('td');
+        divTd.className = "division";
+        divTd.textContent = player.division;
+        tr.appendChild(divTd);
+
+        // LP column
+        const lpTd = document.createElement('td');
+        lpTd.className = "lp";
+        lpTd.textContent = player.lp + " LP";
+        tr.appendChild(lpTd);
+
+        // W/L column
+        const wlTd = document.createElement('td');
+        wlTd.className = "wl";
+        if (typeof player.wins !== 'undefined' && typeof player.losses !== 'undefined' && (player.wins || player.losses)) {
+          wlTd.textContent = `${player.wins}W - ${player.losses}L`;
+        } else {
+          wlTd.textContent = "N/A";
+        }
+        tr.appendChild(wlTd);
+
+        // Winrate column
+        const winrateTd = document.createElement('td');
+        winrateTd.className = "winrate";
+        if ((player.wins || player.losses) && (player.wins + player.losses > 0)) {
+          const totalGames = player.wins + player.losses;
+          const winRate = ((player.wins / totalGames) * 100).toFixed(1);
+          winrateTd.textContent = `${winRate}%`;
+        } else {
+          winrateTd.textContent = "N/A";
+        }
+        tr.appendChild(winrateTd);
+
+        // Rank change column
+        const changeTd = document.createElement('td');
+        changeTd.className = "change";
+        const newRank = i + 1;
+        const oldRank = storedRankings[player.summonerName];
+        if (oldRank !== undefined) {
+          const diff = oldRank - newRank;
+          if (diff > 0) {
+            changeTd.innerHTML = '<span style="color: #66e366;">▲' + diff + '</span>';
+          } else if (diff < 0) {
+            changeTd.innerHTML = '<span style="color: #ff0000;">▼' + Math.abs(diff) + '</span>';
+          } else {
+            changeTd.textContent = "-";
+          }
+        } else {
+          changeTd.textContent = "NEW";
+        }
+        tr.appendChild(changeTd);
+
+        fragment.appendChild(tr);
+      }
+
+      leaderboardBody.innerHTML = "";
+      leaderboardBody.appendChild(fragment);
+
+      // Update stored previous rankings with new rankings for next refresh
+      let newRankings = {};
+      for (let i = 0; i < players.length; i++) {
+        newRankings[players[i].summonerName] = i + 1;
+      }
+      localStorage.setItem("previousRankings", JSON.stringify(newRankings));
+
+      // Hide the refresh indicator
+      refreshIndicator.style.display = "none";
+
+      // Cache the current leaderboard HTML
       localStorage.setItem(
         cacheKey,
         JSON.stringify({ timestamp: Date.now(), html: leaderboardBody.innerHTML })
       );
     }
 
-    // Initialize the leaderboard on page load
+    // Helper function to apply fade-in animation to rows (if using cached HTML)
+    function applyRowFadeIn() {
+      const rows = document.querySelectorAll('#leaderboard tbody tr');
+      rows.forEach((row, index) => {
+        row.style.animation = `fadeInRow 0.5s ease forwards`;
+        row.style.animationDelay = (index * 0.1) + "s";
+      });
+    }
+
+    // Function to handle manual refresh with password
+    function refreshLeaderboard() {
+      const password = prompt("Enter password to refresh leaderboard:");
+      const correctPassword = "It12012002"; // Change as needed
+      if (password !== correctPassword) {
+        alert("Incorrect password. Leaderboard not refreshed.");
+        return;
+      }
+      buildLeaderboard(true);
+    }
+
+    // Initialize leaderboard on page load
     buildLeaderboard();
 
-    // Handle bfcache (if user navigates away and back)
+    // Handle back/forward cache
     window.addEventListener('pageshow', (event) => {
       if (event.persisted) {
         buildLeaderboard();

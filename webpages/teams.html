@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Home - eSports</title>
+  <title>Teams</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     /* Basic styling */
@@ -13,7 +13,7 @@
       font-family: Arial, sans-serif;
     }
     body {
-      background: linear-gradient(135deg, #0f0f0f 0%, #292929 100%);
+      background-color: #1c1c1c;
       color: #fff;
       min-height: 100vh;
       display: flex;
@@ -52,11 +52,13 @@
       text-align: center;
     }
     h1 {
+      margin: 2rem 0 1rem;
       font-size: 2rem;
-      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-align: center;
     }
-    /* Grid layout: the big box (MAROON) in the first row,
-       and the three smaller boxes in the second row */
+    /* Grid layout: the big box in the first row and three smaller boxes in the second row */
     .boxes {
       display: grid;
       grid-template-rows: 2fr 1fr;
@@ -66,20 +68,22 @@
       margin: 0 auto;
       height: 80vh;
     }
-    /* The featured box row */
+    /* Featured big box */
     .big-box {
       display: grid;
       width: 100%;
     }
-    /* The row with the three smaller boxes */
+    /* Row with the three smaller boxes */
     .small-boxes {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 1rem;
     }
+    /* Base styling for team boxes */
     .box {
-      background: rgba(255, 255, 255, 0.1);
+      position: relative;
       border-radius: 8px;
+      overflow: hidden;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -87,12 +91,37 @@
       font-weight: bold;
       text-decoration: none;
       color: #fff;
-      transition: background 0.3s, transform 0.3s;
+      transition: transform 0.3s ease;
     }
     .box:hover {
-      background: rgba(255, 255, 255, 0.2);
       transform: scale(1.05);
     }
+    /* Gradient background pseudo-element */
+    .box::before {
+      content: "";
+      position: absolute;
+      top: -10%;
+      left: -10%;
+      width: 120%;
+      height: 120%;
+      z-index: -1;
+      filter: blur(12px);
+      transform: scale(1.05);
+    }
+    /* Gradient patterns per team */
+    .maroon::before {
+      background: linear-gradient(135deg, rgba(128, 0, 0, 0.7), rgba(200, 0, 0, 0.116));
+    }
+    .white::before {
+      background: linear-gradient(135deg, rgba(255,255,255,0.5), rgba(220, 220, 220, 0.5));
+    }
+    .black::before {
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(50, 50, 50, 0.192));
+    }
+    .gray::before {
+      background: linear-gradient(135deg, rgba(128,128,128,0.7), rgba(200, 200, 200, 0.233));
+    }
+    /* Responsive adjustments */
     @media (max-width: 768px) {
       .boxes {
         grid-template-rows: auto auto;
@@ -120,12 +149,12 @@
     <h1>Teams</h1>
     <div class="boxes">
       <div class="big-box">
-        <a href="team.html?team=TAMUM" class="box">MAROON</a>
+        <a href="team.html?team=TAMUM" class="box maroon">MAROON</a>
       </div>
       <div class="small-boxes">
-        <a href="team.html?team=TAMUW" class="box">WHITE</a>
-        <a href="team.html?team=TAMUB" class="box">BLACK</a>
-        <a href="team.html?team=TAMUG" class="box">GRAY</a>
+        <a href="team.html?team=TAMUW" class="box white">WHITE</a>
+        <a href="team.html?team=TAMUB" class="box black">BLACK</a>
+        <a href="team.html?team=TAMUG" class="box gray">GRAY</a>
       </div>
     </div>
   </div>
