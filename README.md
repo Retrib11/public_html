@@ -1,3 +1,5 @@
+80% chatgpt, 20% retrian.
+
 # League of Legends Leaderboard Website for TAMU
 
 ## Workflow Timeline
