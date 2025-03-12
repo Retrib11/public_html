@@ -10,7 +10,7 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: Arial, sans-serif;
+      font-family: Calibri, sans-serif;
     }
     body {
       background-color: #1c1c1c;
@@ -41,27 +41,16 @@
       text-decoration: none;
       color: #fff;
     }
-    nav ul li:hover a {
+    nav ul li a:hover {
       color: #ccc;
     }
+
     .container {
       max-width: 1200px;
       margin: 2rem auto;
       padding: 0 2rem;
     }
-    .back-link {
-      display: inline-block;
-      text-decoration: none;
-      color: #fff;
-      background: #333;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      margin-bottom: 1rem;
-      transition: background 0.3s;
-    }
-    .back-link:hover {
-      background: #555;
-    }
+
     /* Player image styles */
     .player-image {
       text-align: center;
@@ -72,10 +61,12 @@
       border-radius: 50%;
       object-fit: cover;
     }
+
     h1 {
       text-align: center;
       margin-bottom: 1rem;
     }
+
     /* Top section styles */
     .top-section {
       display: flex;
@@ -101,6 +92,7 @@
       margin: 0.5rem 0;
       font-size: 1.1rem;
     }
+
     /* Achievements grid styles */
     .achievements-grid {
       display: grid;
@@ -123,6 +115,7 @@
       font-size: 0.9rem;
       color: #aaa;
     }
+
     /* Schedule table styles */
     .schedule-table {
       width: 100%;
@@ -158,7 +151,7 @@
   </header>
 
   <div class="container">
-    <a class="back-link" href="players.html">&larr; Back to Players</a>
+    <!-- No back button -->
     
     <!-- Player Image -->
     <div class="player-image">
@@ -255,7 +248,7 @@
         document.getElementById('lastGameDate').textContent = data.lastGame.date || 'N/A';
       }
 
-      // Fill achievements grid (expects 8 achievements)
+      // Fill achievements grid (expects an array of achievements)
       if (data.achievements && Array.isArray(data.achievements)) {
         const achievementsGrid = document.getElementById('achievementsGrid');
         achievementsGrid.innerHTML = ''; // Clear existing content
@@ -265,6 +258,7 @@
           
           const title = document.createElement('h3');
           title.textContent = ach.title || 'Achievement';
+          
           const desc = document.createElement('p');
           desc.textContent = ach.description || '';
           

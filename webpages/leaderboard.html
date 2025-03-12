@@ -9,7 +9,7 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: Arial, sans-serif;
+      font-family: Calibri, sans-serif;
     }
     body {
       background-color: #1c1c1c;
@@ -23,6 +23,16 @@
       background-color: #111;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
     }
+
+    h1 {
+      margin: 2rem 0 1rem;
+      font-size: 2rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-align: center;
+    }
+
+
     .logo {
       height: 40px;
       margin-right: 2rem;
@@ -46,7 +56,7 @@
     
     .container {
       max-width: 1200px;
-      margin: 2rem auto;
+      margin: 4rem auto;
       padding: 0 2rem;
     }
     
@@ -70,7 +80,8 @@
     thead {
       background-color: #2C2C2C;
     }
-    th, td {
+    th,
+    td {
       padding: 0.5rem;
       text-align: left;
       border-bottom: 1px solid #333;
@@ -116,7 +127,8 @@
     .player-name {
       font-weight: bold;
     }
-    .tier, .division {
+    .tier,
+    .division {
       font-weight: bold;
       text-transform: capitalize;
     }
@@ -164,8 +176,14 @@
     
     /* Row fade-in animation */
     @keyframes fadeInRow {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
   </style>
 </head>
@@ -187,8 +205,10 @@
     
     <!-- Refresh indicator -->
     <div id="refresh-indicator">Refreshing leaderboard...</div>
+    
     <!-- Manual refresh button -->
     <button class="refresh-btn" onclick="refreshLeaderboard()">Refresh Leaderboard</button>
+    
     <!-- Update note -->
     <div class="update-note">Note: Leaderboard updates every 3 hours.</div>
 

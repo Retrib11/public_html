@@ -10,7 +10,7 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: Arial, sans-serif;
+      font-family: Calibri, sans-serif;
     }
     body {
       background-color: #1c1c1c;
@@ -22,7 +22,7 @@
       align-items: center;
       padding: 1rem 2rem;
       background-color: #111;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
     }
     .logo {
       height: 40px;
@@ -34,37 +34,30 @@
     }
     nav ul li {
       margin-right: 1.5rem;
-      cursor: pointer;
       transition: color 0.3s ease;
+      cursor: pointer;
     }
     nav ul li a {
       text-decoration: none;
       color: #fff;
     }
-    nav ul li:hover a {
+    nav ul li a:hover {
       color: #ccc;
     }
+
     .container {
       max-width: 1200px;
       margin: 2rem auto;
       padding: 0 2rem;
     }
-    .back-link {
-      display: inline-block;
-      text-decoration: none;
-      color: #fff;
-      background: #333;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      margin-bottom: 1rem;
-      transition: background 0.3s;
-    }
-    .back-link:hover {
-      background: #555;
-    }
+
+    /* REMOVED the .back-link element entirely */
+
     h1 {
       margin-bottom: 1rem;
     }
+
+    /* Overview & Last Match Boxes */
     .info-sections {
       display: flex;
       flex-wrap: wrap;
@@ -96,9 +89,85 @@
       font-size: 1.25rem;
       margin-left: 0.3rem;
     }
-    #totalGames, #seriesWinRate, #overallWinRate {
+    #totalGames,
+    #seriesWinRate,
+    #overallWinRate {
       font-size: 1.5rem;
     }
+
+    /* Roster container */
+    .roster-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .roster-box {
+      background: #1a1a1a;
+      border-radius: 8px;
+      padding: 1rem;
+      position: relative;
+      margin: 0.5rem 0;
+      border-bottom: 5px solid #800000; /* default is maroon */
+    }
+    .roster-title {
+      text-align: center;
+      font-size: 1rem;
+      color: #bbb;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    .player-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-evenly;
+      flex-wrap: nowrap;
+    }
+
+    /* Each player card stacks the image above the name */
+    .player-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin: 0.5rem;
+    }
+
+    .player-card a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: #fff;
+    }
+
+    .player-image {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #333;
+      margin-bottom: 0.3rem;
+      transition: transform 0.3s ease, filter 0.3s ease;
+      cursor: pointer;
+    }
+    .player-image:hover {
+      transform: scale(1.1);
+      filter: brightness(1.2);
+    }
+
+    .player-name {
+      font-size: 0.9rem;
+      margin: 0;
+      text-decoration: none;
+      color: #fff;
+      transition: color 0.3s;
+    }
+    .player-name:hover {
+      color: #ccc;
+    }
+
+    /* Schedule */
     .schedule-table {
       width: 100%;
       border-collapse: collapse;
@@ -133,9 +202,10 @@
   </header>
 
   <div class="container">
-    <a class="back-link" href="teams.html">&larr; Back to Teams</a>
+    <!-- NO BACK BUTTON HERE -->
     <h1 id="teamName">Team Name</h1>
 
+    <!-- Overview & Last Match Boxes -->
     <div class="info-sections">
       <div class="info-box">
         <h2>2025 Overview</h2>
@@ -151,6 +221,21 @@
       </div>
     </div>
 
+    <div class="roster-container">
+      <!-- Main Roster -->
+      <div class="roster-box" id="mainRosterBox">
+        <div class="roster-title">Main Roster</div>
+        <div class="player-row" id="mainRosterRow"></div>
+      </div>
+
+      <!-- Substitutes -->
+      <div class="roster-box" id="subsRosterBox">
+        <div class="roster-title">Substitutes</div>
+        <div class="player-row" id="subsRosterRow"></div>
+      </div>
+    </div>
+
+    <!-- Schedule -->
     <div class="info-box">
       <h2>Schedule</h2>
       <table class="schedule-table" id="scheduleTable">
@@ -169,30 +254,26 @@
   </div>
 
   <script>
-    // --- 1) Get the team param from the URL ---
+    // 1) Get the team param from the URL
     const urlParams = new URLSearchParams(window.location.search);
     const teamParam = urlParams.get('team') || 'TAMUM';
-
-    // Show the team name at the top
     document.getElementById('teamName').innerText = teamParam;
 
-    // --- 2) Build the path to ../schedules/TEAM.txt ---
-    const txtFilePath = '../schedules/' + teamParam + '.txt';
+    // 2) Change ONLY the bottom border color depending on team code
+    setLineColor(teamParam);
 
-    // --- 3) Fetch the plain text file for this team ---
-    fetch(txtFilePath)
+    // 3) Fetch & parse the schedule
+    const schedulePath = '../schedules/' + teamParam + '.txt';
+    fetch(schedulePath)
       .then(response => {
-        if (!response.ok) {
-          throw new Error('Team file not found');
-        }
+        if (!response.ok) throw new Error('Team schedule file not found');
         return response.text();
       })
       .then(text => {
-        // --- 4) Parse the text into matches ---
         const matches = parseMatches(text);
-
-        // --- 5) Compute stats & fill in the page ---
         fillTeamData(matches);
+        // After schedule is loaded, fetch the roster
+        fetchCurrentTeamRoster(teamParam);
       })
       .catch(err => {
         console.error(err);
@@ -200,7 +281,7 @@
       });
 
     function parseMatches(fullText) {
-      // Each match is 3 lines: "TAMUM vs X", "Score: Y-Z", "Date: mm/dd/yyyy"
+      // Each match is 3 lines: "TEAM vs Opponent", "Score: X-Y", "Date: mm/dd/yyyy"
       const lines = fullText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
       const matches = [];
 
@@ -209,22 +290,22 @@
         const scoreLine = lines[i + 1];
         const dateLine = lines[i + 2];
 
-        // "TEAM vs Opponent"
         let opponent = '';
         const vsParts = vsLine.split(' vs ');
         if (vsParts.length === 2) {
           opponent = vsParts[1];
         }
 
-        // "Score: X-Y"
-        let homeScore = 0, awayScore = 0;
-        const scoreParts = scoreLine.replace('Score:', '').trim().split('-');
-        if (scoreParts.length === 2) {
-          homeScore = parseInt(scoreParts[0]) || 0;
-          awayScore = parseInt(scoreParts[1]) || 0;
+        let homeScore = 0;
+        let awayScore = 0;
+        if (scoreLine.startsWith('Score:')) {
+          const scoreParts = scoreLine.replace('Score:', '').trim().split('-');
+          if (scoreParts.length === 2) {
+            homeScore = parseInt(scoreParts[0]) || 0;
+            awayScore = parseInt(scoreParts[1]) || 0;
+          }
         }
 
-        // "Date: mm/dd/yyyy"
         let matchDate = '';
         if (dateLine.startsWith('Date:')) {
           matchDate = dateLine.replace('Date:', '').trim();
@@ -232,7 +313,6 @@
 
         matches.push({ opponent, homeScore, awayScore, date: matchDate });
       }
-
       return matches;
     }
 
@@ -244,7 +324,6 @@
       let lastMatch = null;
 
       matches.forEach(m => {
-        // If score is 0-0, treat as unplayed
         if (m.homeScore === 0 && m.awayScore === 0) return;
         completedMatches++;
         if (m.homeScore > m.awayScore) {
@@ -256,7 +335,7 @@
 
       // Last played match
       for (let i = matches.length - 1; i >= 0; i--) {
-        if (!(matches[i].homeScore === 0 && matches[i].awayScore === 0)) {
+        if (matches[i].homeScore !== 0 || matches[i].awayScore !== 0) {
           lastMatch = matches[i];
           break;
         }
@@ -267,7 +346,6 @@
       scheduleTbody.innerHTML = '';
       matches.forEach(m => {
         const row = document.createElement('tr');
-
         const dateTd = document.createElement('td');
         dateTd.textContent = m.date;
 
@@ -287,15 +365,15 @@
 
       // Overview
       document.getElementById('totalGames').textContent = completedMatches;
-      const seriesWinRate = (completedMatches > 0)
-        ? ((seriesWins / completedMatches) * 100).toFixed(1) + '%'
-        : '0%';
-      document.getElementById('seriesWinRate').textContent = seriesWinRate;
+      document.getElementById('seriesWinRate').textContent =
+        (completedMatches > 0)
+          ? ((seriesWins / completedMatches) * 100).toFixed(1) + '%'
+          : '0%';
 
-      const overallWinRate = (totalGamesPlayed > 0)
-        ? ((totalGamesWon / totalGamesPlayed) * 100).toFixed(1) + '%'
-        : '0%';
-      document.getElementById('overallWinRate').textContent = overallWinRate;
+      document.getElementById('overallWinRate').textContent =
+        (totalGamesPlayed > 0)
+          ? ((totalGamesWon / totalGamesPlayed) * 100).toFixed(1) + '%'
+          : '0%';
 
       if (lastMatch) {
         document.getElementById('lastMatchScore').textContent = lastMatch.homeScore + '-' + lastMatch.awayScore;
@@ -306,6 +384,118 @@
         document.getElementById('lastMatchOpponent').textContent = 'N/A';
         document.getElementById('lastMatchDate').textContent = 'N/A';
       }
+    }
+
+    // 4) Fetch & parse the roster
+    function fetchCurrentTeamRoster(teamCode) {
+      const rosterFilePath = '../current_teams/Current_' + teamCode + '.txt';
+      fetch(rosterFilePath)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Roster file not found for ' + teamCode);
+          }
+          return response.text();
+        })
+        .then(rosterText => {
+          const lines = rosterText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+          let section = '';
+          const mainRoster = [];
+          const subs = [];
+
+          lines.forEach(line => {
+            if (/^main roster/i.test(line)) {
+              section = 'main';
+            } else if (/^substitutes/i.test(line)) {
+              section = 'subs';
+            } else {
+              // Just a name (or "Name,Role")
+              if (section === 'main') {
+                mainRoster.push(line);
+              } else if (section === 'subs') {
+                subs.push(line);
+              }
+            }
+          });
+          displayRoster(mainRoster, subs);
+        })
+        .catch(err => {
+          console.error('Error fetching roster:', err);
+          document.getElementById('mainRosterRow').innerHTML = '<p>No roster available</p>';
+          document.getElementById('subsRosterRow').innerHTML = '<p>No roster available</p>';
+        });
+    }
+
+    // 5) Display the roster
+    function displayRoster(mainRoster, subs) {
+      const mainRosterRow = document.getElementById('mainRosterRow');
+      const subsRosterRow = document.getElementById('subsRosterRow');
+
+      mainRosterRow.innerHTML = '';
+      subsRosterRow.innerHTML = '';
+
+      mainRoster.forEach(name => {
+        const card = createPlayerCard(name);
+        mainRosterRow.appendChild(card);
+      });
+      subs.forEach(name => {
+        const card = createPlayerCard(name);
+        subsRosterRow.appendChild(card);
+      });
+    }
+
+    // Helper: create a single player card
+    function createPlayerCard(playerName) {
+      const slug = playerName.replace(/\s/g, '').toLowerCase();
+      const card = document.createElement('div');
+      card.className = 'player-card';
+
+      // Link wraps both image + text (makes both clickable)
+      const link = document.createElement('a');
+      link.href = 'player.html?player=' + encodeURIComponent(slug);
+
+      // Circular image
+      const img = document.createElement('img');
+      img.className = 'player-image';
+      img.src = '../player_images/' + encodeURIComponent(slug) + '.jpg';
+      img.alt = playerName;
+
+      // Name text
+      const p = document.createElement('p');
+      p.className = 'player-name';
+      p.textContent = playerName;
+
+      link.appendChild(img);
+      link.appendChild(p);
+      card.appendChild(link);
+
+      return card;
+    }
+
+    // Only change the border-bottom color by team code
+    function setLineColor(teamCode) {
+      // default maroon
+      let lineColor = '#800000';
+
+      switch (teamCode.toUpperCase()) {
+        case 'TAMUM':
+          lineColor = '#800000'; // Maroon
+          break;
+        case 'TAMUW':
+          lineColor = '#FFFFFF'; // White
+          break;
+        case 'TAMUB':
+          lineColor = '#000000'; // Black
+          break;
+        case 'TAMUG':
+          lineColor = '#808080'; // Gray
+          break;
+        default:
+          lineColor = '#800000'; // fallback maroon
+          break;
+      }
+
+      document.getElementById('mainRosterBox').style.borderBottomColor = lineColor;
+      document.getElementById('subsRosterBox').style.borderBottomColor = lineColor;
     }
   </script>
 </body>

@@ -1,0 +1,62 @@
+{
+    "name": "Zed04",
+    "stats": {
+        "gamesPlayed": "0",
+        "wins": "0",
+        "losses": "0",
+        "winRate": "0%"
+    },
+    "lastGame": {
+        "score": "NA",
+        "opponent": "NA",
+        "date": "NA"
+    },
+    "achievements": [
+        {
+            "title": "Top Rank",
+            "description": "Challenger"
+        },
+        {
+            "title": "Favorite Champion",
+            "description": "Olaf"
+        },
+        {
+            "title": "Jungle Main",
+            "description": "1v9"
+        },
+        {
+            "title": " ",
+            "description": " "
+        },
+        {
+            "title": "# of Bans",
+            "description": "14"
+        },
+        {
+            "title": " ",
+            "description": " "
+        },
+        {
+            "title": " ",
+            "description": " "
+        },
+        {
+            "title": " ",
+            "description": " "
+        }
+    ],
+    "schedule": [
+        {
+            "date": "03/12/2025",
+            "opponent": "Team X",
+            "result": "Win",
+            "score": "30-22"
+        },
+        {
+            "date": "03/15/2025",
+            "opponent": "Team Y",
+            "result": "Loss",
+            "score": "28-30"
+        }
+    ]
+}

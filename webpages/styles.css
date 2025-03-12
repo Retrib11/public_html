@@ -6,9 +6,11 @@
 }
 
 body {
+  /* add padding-top so content isn't under the header */
+  padding-top: 80px; /* adjust to match header height */
   font-family: Calibri, sans-serif;
-  background-color: #0a0a0a; /* Dark blackish background */
-  color: #ffffff; /* White text */
+  background-color: #0a0a0a;
+  color: #ffffff;
   line-height: 1.6;
 }
 
@@ -21,7 +23,14 @@ body {
 
 /* Header Styles */
 header {
-  background-color: #1a1a1a; /* Slightly lighter black for contrast */
+  position: fixed;        /* Fix header at the top so we can slide it in/out */
+  width: 100%;            /* Full width */
+  top: 0;                 /* Start at top: 0 */
+  left: 0;
+  z-index: 9999;          /* Ensure it's above other elements */
+  transition: top 0.3s ease; /* Smooth slide transition */
+  
+  background-color: #1a1a1a;
   padding: 20px 0;
   border-bottom: 2px solid #333;
 }
@@ -48,7 +57,7 @@ nav ul li a {
 }
 
 nav ul li a:hover {
-  color: #ff4757; /* A nice red color for hover effect */
+  color: #ff4757;
 }
 
 /* Main Content Styles */
@@ -73,7 +82,7 @@ main {
 .btn {
   display: inline-block;
   padding: 10px 20px;
-  background-color: #ff4757; /* Red button */
+  background-color: #ff4757;
   color: #ffffff;
   text-decoration: none;
   font-weight: 500;
@@ -82,7 +91,7 @@ main {
 }
 
 .btn:hover {
-  background-color: #e84141; /* Darker red on hover */
+  background-color: #e84141;
 }
 
 /* Footer Styles */
