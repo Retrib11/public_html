@@ -23,16 +23,6 @@
       background-color: #111;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
     }
-
-    h1 {
-      margin: 2rem 0 1rem;
-      font-size: 2rem;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      text-align: center;
-    }
-
-
     .logo {
       height: 40px;
       margin-right: 2rem;
@@ -53,29 +43,77 @@
     nav ul li:hover a {
       color: #ccc;
     }
-    
+
+    h1 {
+      margin: 2rem 0 1rem;
+      font-size: 2rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-align: center;
+    }
+
     .container {
       max-width: 1200px;
       margin: 4rem auto;
       padding: 0 2rem;
     }
-    
-    /* Refresh indicator styling */
-    #refresh-indicator {
-      text-align: center;
-      font-weight: bold;
-      margin-bottom: 1rem;
-      display: none;
+
+    /* Progress bar container */
+    #progress-container {
+      width: 50%;
+      margin: 1rem auto;
+      background-color: #333;
+      border-radius: 4px;
+      overflow: hidden;
+      display: none; /* hidden by default */
     }
-    
+    #progress-bar {
+      height: 12px;
+      width: 0;
+      background-color: #56ce56;
+      transition: width 0.2s ease;
+    }
+    #progress-text {
+      text-align: center;
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+      display: none; /* hidden by default */
+    }
+
+    /* Refresh Button Styling */
+    .refresh-btn {
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      background-color: #444;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.3s ease;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .refresh-btn:hover {
+      background-color: #666;
+    }
+    .update-note {
+      text-align: center;
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      color: #ccc;
+    }
+
     /* Table styling */
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 1rem;
+      margin-top: 2rem;
       background-color: #1C1C1C;
       border-radius: 6px;
       overflow: hidden;
+      display: none; /* hidden by default; shown after data is loaded */
     }
     thead {
       background-color: #2C2C2C;
@@ -94,7 +132,7 @@
     tbody tr:hover {
       background-color: #2E2E2E;
     }
-    
+
     /* Special styling for top ranks */
     .big-box td {
       font-size: 1rem;
@@ -111,7 +149,7 @@
       background-color: #cd80322a;
       padding: 0.5rem;
     }
-    
+
     /* Specific column styling */
     .rank {
       width: 40px;
@@ -149,31 +187,7 @@
       text-align: center;
       font-weight: bold;
     }
-    
-    /* Refresh Button Styling */
-    .refresh-btn {
-      margin-top: 1rem;
-      padding: 0.75rem 1.5rem;
-      background-color: #444;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: background-color 0.3s ease;
-    }
-    .refresh-btn:hover {
-      background-color: #666;
-    }
-    
-    /* Note under refresh button */
-    .update-note {
-      text-align: center;
-      margin-top: 0.5rem;
-      font-size: 0.9rem;
-      color: #ccc;
-    }
-    
+
     /* Row fade-in animation */
     @keyframes fadeInRow {
       from {
@@ -199,17 +213,18 @@
       </ul>
     </nav>
   </header>
-  
+
   <div class="container">
     <h1>Leaderboard</h1>
-    
-    <!-- Refresh indicator -->
-    <div id="refresh-indicator">Refreshing leaderboard...</div>
-    
-    <!-- Manual refresh button -->
+
+    <!-- Progress bar + text for refreshing -->
+    <div id="progress-container">
+      <div id="progress-bar"></div>
+    </div>
+    <div id="progress-text"></div>
+
+    <!-- Manual refresh button (with 5-min cooldown, no password) -->
     <button class="refresh-btn" onclick="refreshLeaderboard()">Refresh Leaderboard</button>
-    
-    <!-- Update note -->
     <div class="update-note">Note: Leaderboard updates every 3 hours.</div>
 
     <table id="leaderboard">
@@ -231,7 +246,7 @@
       </tbody>
     </table>
   </div>
-  
+
   <script>
     const apiKey = "RGAPI-61e5ca1f-b1b7-4bba-b1bf-95d880f5e106"; // Use your valid API key
     const version = "15.1.1"; // DDragon version for profile icons
@@ -239,6 +254,10 @@
     // Summoner data caching (optional)
     const cacheKey = "leaderboardCache";
     const cacheDuration = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
+
+    // 5-minute cooldown for manual refresh
+    // (Currently set to 0 for quick testing; set back to 5 as desired)
+    const REFRESH_COOLDOWN_MS = 3 * 60 * 1000;
 
     // Define ranking orders
     const tierOrder = {
@@ -260,14 +279,14 @@
       '-': 4
     };
 
-    // Function to load summoner data from a text file formatted as "SummonerOne#NA1" per line.
     async function loadSummoners() {
       try {
         const response = await fetch('summoners.txt');
         if (!response.ok) throw new Error('Failed to load summoner data');
         const text = await response.text();
-        // Each line represents a summoner in "gameName#tagLine" format.
-        const summoners = text.split('\n')
+        // Each line in summoners.txt should be "GameName#TagLine"
+        const summoners = text
+          .split('\n')
           .map(line => line.trim())
           .filter(line => line.length > 0)
           .map(line => {
@@ -305,45 +324,61 @@
     }
 
     /**
-     * Builds or rebuilds the leaderboard by sorting players based on their tier, division, and LP.
-     * A fade-in animation is applied row-by-row.
+     * Build or rebuild the leaderboard. 
+     * Shows only the progress bar (no loading image).
      * @param {boolean} forceRefresh - If true, fetch fresh data.
      */
     async function buildLeaderboard(forceRefresh = false) {
-      const leaderboardBody = document.querySelector('#leaderboard tbody');
-      const refreshIndicator = document.getElementById("refresh-indicator");
+      const progressContainer = document.getElementById('progress-container');
+      const progressBar = document.getElementById('progress-bar');
+      const progressText = document.getElementById('progress-text');
+      const leaderboardTable = document.getElementById('leaderboard');
+      const leaderboardBody = leaderboardTable.querySelector('tbody');
 
-      // Load stored previous rankings from localStorage (if any)
+      // Hide table initially
+      leaderboardTable.style.display = 'none';
+
+      // Try local cache if not forcing a refresh
       let storedRankings = JSON.parse(localStorage.getItem("previousRankings")) || {};
-
-      // If not forcing refresh, try local cache
       if (!forceRefresh) {
         const cachedData = localStorage.getItem(cacheKey);
         if (cachedData) {
           const cache = JSON.parse(cachedData);
           if (Date.now() - cache.timestamp < cacheDuration) {
             leaderboardBody.innerHTML = cache.html;
-            applyRowFadeIn();
+            if (leaderboardBody.children.length > 0) {
+              leaderboardTable.style.display = 'table';
+              applyRowFadeIn();
+            }
             return;
           }
         }
       }
 
-      // Show the refresh indicator
-      refreshIndicator.style.display = "block";
-
-      const fragment = document.createDocumentFragment();
       const summoners = await loadSummoners();
+      if (summoners.length === 0) {
+        console.warn("No summoners found in summoners.txt.");
+        // You can display a message here if you'd like (like "No summoners found.")
+        return;
+      }
+
+      // Show the progress bar
+      progressContainer.style.display = 'block';
+      progressText.style.display = 'block';
+      progressBar.style.width = '0';
+      progressText.textContent = 'Fetching data... 0%';
+
+      const totalSummoners = summoners.length;
       const players = [];
 
-      for (let i = 0; i < summoners.length; i++) {
+      for (let i = 0; i < totalSummoners; i++) {
         const summoner = summoners[i];
         try {
           const accountData = await getAccountInfo(summoner.gameName, summoner.tagLine);
           const summonerInfo = await getSummonerInfo(accountData.puuid);
           const leagueData = await getLeagueInfo(summonerInfo.id);
           const soloEntry = leagueData.find(entry => entry.queueType === "RANKED_SOLO_5x5") || null;
-          
+
           let tier = "unranked";
           let division = "-";
           let lp = 0, wins = 0, losses = 0;
@@ -354,10 +389,10 @@
             wins = soloEntry.wins;
             losses = soloEntry.losses;
           }
-          
+
           const tierValue = tierOrder[tier] !== undefined ? tierOrder[tier] : tierOrder["unranked"];
           const divValue = divisionOrder[division] !== undefined ? divisionOrder[division] : divisionOrder["-"];
-          
+
           players.push({
             summonerName: summoner.gameName,
             iconId: summonerInfo.profileIconId,
@@ -371,6 +406,7 @@
           });
         } catch (error) {
           console.error("Error fetching data for summoner:", summoner, error);
+          // Fallback to unranked if errors
           players.push({
             summonerName: summoner.gameName,
             iconId: 0,
@@ -383,20 +419,25 @@
             divValue: divisionOrder["-"]
           });
         }
+
+        // Update the progress bar
+        const progressPercent = Math.round(((i + 1) / totalSummoners) * 100);
+        progressBar.style.width = `${progressPercent}%`;
+        progressText.textContent = `Fetching data... ${progressPercent}%`;
       }
 
-      // Sort players: by tier, then division, then LP (descending)
+      // Sort players: by tier, then division, then LP descending
       players.sort((a, b) => {
         if (a.tierValue !== b.tierValue) return a.tierValue - b.tierValue;
         if (a.divValue !== b.divValue) return a.divValue - b.divValue;
         return b.lp - a.lp;
       });
 
-      // Build new table rows with fade-in animation
+      // Build rows
+      const fragment = document.createDocumentFragment();
       for (let i = 0; i < players.length; i++) {
         const player = players[i];
         const tr = document.createElement('tr');
-        // Apply fade-in animation to each row with delay based on index
         tr.style.animation = `fadeInRow 0.5s ease forwards`;
         tr.style.animationDelay = (i * 0.1) + "s";
 
@@ -409,22 +450,17 @@
           tr.classList.add('small-box');
         }
 
-        // Rank column
+        // Rank
         const rankTd = document.createElement('td');
         rankTd.className = "rank";
         rankTd.textContent = i + 1;
-        if (i === 0) {
-          rankTd.style.color = "#FFD700";
-        } else if (i === 1) {
-          rankTd.style.color = "#C0C0C0";
-        } else if (i === 2) {
-          rankTd.style.color = "#CD7F32";
-        } else {
-          rankTd.style.color = "#FFFFFF";
-        }
+        if (i === 0) rankTd.style.color = "#FFD700";
+        else if (i === 1) rankTd.style.color = "#C0C0C0";
+        else if (i === 2) rankTd.style.color = "#CD7F32";
+        else rankTd.style.color = "#FFFFFF";
         tr.appendChild(rankTd);
 
-        // Icon column
+        // Icon
         const iconTd = document.createElement('td');
         iconTd.className = "icon";
         const iconImg = document.createElement('img');
@@ -433,13 +469,13 @@
         iconTd.appendChild(iconImg);
         tr.appendChild(iconTd);
 
-        // Player name column
+        // Player name
         const nameTd = document.createElement('td');
         nameTd.className = "player-name";
         nameTd.textContent = player.summonerName;
         tr.appendChild(nameTd);
 
-        // Tier (as image)
+        // Tier image
         const tierTd = document.createElement('td');
         tierTd.className = "tier";
         const tierImg = document.createElement('img');
@@ -449,32 +485,32 @@
         tierTd.appendChild(tierImg);
         tr.appendChild(tierTd);
 
-        // Division column
+        // Division
         const divTd = document.createElement('td');
         divTd.className = "division";
         divTd.textContent = player.division;
         tr.appendChild(divTd);
 
-        // LP column
+        // LP
         const lpTd = document.createElement('td');
         lpTd.className = "lp";
         lpTd.textContent = player.lp + " LP";
         tr.appendChild(lpTd);
 
-        // W/L column
+        // W/L
         const wlTd = document.createElement('td');
         wlTd.className = "wl";
-        if (typeof player.wins !== 'undefined' && typeof player.losses !== 'undefined' && (player.wins || player.losses)) {
+        if (player.wins + player.losses > 0) {
           wlTd.textContent = `${player.wins}W - ${player.losses}L`;
         } else {
           wlTd.textContent = "N/A";
         }
         tr.appendChild(wlTd);
 
-        // Winrate column
+        // Winrate
         const winrateTd = document.createElement('td');
         winrateTd.className = "winrate";
-        if ((player.wins || player.losses) && (player.wins + player.losses > 0)) {
+        if (player.wins + player.losses > 0) {
           const totalGames = player.wins + player.losses;
           const winRate = ((player.wins / totalGames) * 100).toFixed(1);
           winrateTd.textContent = `${winRate}%`;
@@ -483,7 +519,7 @@
         }
         tr.appendChild(winrateTd);
 
-        // Rank change column
+        // Rank change
         const changeTd = document.createElement('td');
         changeTd.className = "change";
         const newRank = i + 1;
@@ -491,9 +527,9 @@
         if (oldRank !== undefined) {
           const diff = oldRank - newRank;
           if (diff > 0) {
-            changeTd.innerHTML = '<span style="color: #66e366;">▲' + diff + '</span>';
+            changeTd.innerHTML = `<span style="color: #66e366;">▲${diff}</span>`;
           } else if (diff < 0) {
-            changeTd.innerHTML = '<span style="color: #ff0000;">▼' + Math.abs(diff) + '</span>';
+            changeTd.innerHTML = `<span style="color: #ff0000;">▼${Math.abs(diff)}</span>`;
           } else {
             changeTd.textContent = "-";
           }
@@ -505,27 +541,34 @@
         fragment.appendChild(tr);
       }
 
+      // Insert rows
       leaderboardBody.innerHTML = "";
       leaderboardBody.appendChild(fragment);
 
-      // Update stored previous rankings with new rankings for next refresh
+      // Update stored ranks
       let newRankings = {};
       for (let i = 0; i < players.length; i++) {
         newRankings[players[i].summonerName] = i + 1;
       }
       localStorage.setItem("previousRankings", JSON.stringify(newRankings));
 
-      // Hide the refresh indicator
-      refreshIndicator.style.display = "none";
-
-      // Cache the current leaderboard HTML
+      // Cache the table
       localStorage.setItem(
         cacheKey,
         JSON.stringify({ timestamp: Date.now(), html: leaderboardBody.innerHTML })
       );
+
+      // Reveal the table if we have data
+      if (players.length > 0) {
+        leaderboardTable.style.display = 'table';
+      }
+
+      // Hide progress
+      progressContainer.style.display = 'none';
+      progressText.style.display = 'none';
     }
 
-    // Helper function to apply fade-in animation to rows (if using cached HTML)
+    // Fade-in for rows if using cached data
     function applyRowFadeIn() {
       const rows = document.querySelectorAll('#leaderboard tbody tr');
       rows.forEach((row, index) => {
@@ -534,21 +577,25 @@
       });
     }
 
-    // Function to handle manual refresh with password
+    // Manual refresh with cooldown
     function refreshLeaderboard() {
-      const password = prompt("Enter password to refresh leaderboard:");
-      const correctPassword = "It12012002"; // Change as needed
-      if (password !== correctPassword) {
-        alert("Incorrect password. Leaderboard not refreshed.");
+      const lastRefresh = parseInt(localStorage.getItem("lastManualRefreshTime") || "0", 10);
+      const now = Date.now();
+      if (now - lastRefresh < REFRESH_COOLDOWN_MS) {
+        const timeLeft = REFRESH_COOLDOWN_MS - (now - lastRefresh);
+        const minutesLeft = Math.floor(timeLeft / 60000);
+        const secondsLeft = Math.floor((timeLeft % 60000) / 1000);
+        alert(`Please wait ${minutesLeft}m ${secondsLeft}s before refreshing again.`);
         return;
       }
+      localStorage.setItem("lastManualRefreshTime", now.toString());
       buildLeaderboard(true);
     }
 
-    // Initialize leaderboard on page load
+    // Initialize on page load
     buildLeaderboard();
 
-    // Handle back/forward cache
+    // Rebuild if coming from back/forward cache
     window.addEventListener('pageshow', (event) => {
       if (event.persisted) {
         buildLeaderboard();
